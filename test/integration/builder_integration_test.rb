@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class BuilderIntegrationTest < ActiveSupport::TestCase
   include FileSandbox
-  
+
   def test_checkout
     # with_project calls svn.checkout
     with_project 'passing_project' do |project, sandbox|
@@ -28,6 +28,24 @@ class BuilderIntegrationTest < ActiveSupport::TestCase
       assert build_dir
       assert File.exists?("#{build_dir}/changeset.log")
       assert File.exists?("#{build_dir}/build.log")
+
+      expected_reasons = "New revision 7 detected
+Revision 7 committed by averkhov on 2007-01-13 01:05:26
+Making both revision labels up to date
+  M /passing_project/revision_label.txt
+  M /failing_project/revision_label.txt
+
+Revision 4 committed by averkhov on 2007-01-11 21:02:03
+and one more revision, for good measure
+  M /passing_project/revision_label.txt
+
+Revision 3 committed by averkhov on 2007-01-11 21:01:43
+another revision
+  M /passing_project/revision_label.txt
+
+"
+      assert_equal expected_reasons, result.changeset
+      assert_equal expected_reasons, File.open("#{build_dir}/changeset.log").read
     end
   end
 
@@ -50,7 +68,7 @@ class BuilderIntegrationTest < ActiveSupport::TestCase
 
   def test_build_if_necessary_should_update_and_reload_broken_central_config
     with_project('project_with_central_config', :revision => 18) do |project, sandbox|
-      assert_equal "raise 'Error in config file'\n\n", 
+      assert_equal "raise 'Error in config file'\n\n",
                    File.read("#{sandbox.root}/project_with_central_config/work/cruise_config.rb")
       begin
         $config_loaded = false
@@ -217,7 +235,7 @@ db-migrate
 
   def with_project(project_name, options = {}, &block)
     in_sandbox do |sandbox|
-      svn = SourceControl::Subversion.new :repository => "#{fixture_repository_url}/#{project_name}", 
+      svn = SourceControl::Subversion.new :repository => "#{fixture_repository_url}/#{project_name}",
                            :path => "#{project_name}/work"
       svn.checkout options[:revision], StringIO.new
 
