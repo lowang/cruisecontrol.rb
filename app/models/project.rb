@@ -267,7 +267,9 @@ class Project
     begin
       if build_necessary?(reasons = [])
         remove_build_requested_flag_file if build_requested?
-        return build(source_control.latest_revision, [reasons.first, reasons.last.join("\n")])
+        # make sure reasons is a text
+        reasons = [reasons.first, reasons.last.is_a?(Array) ? reasons.last.join("\n") : reasons.last]
+        return build(source_control.latest_revision, reasons)
       else
         return nil
       end
